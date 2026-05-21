@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Тренажёр | Относим к активу по договору</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(145deg, #f0f4fa 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, 'Roboto', sans-serif;
+            padding: 1rem;
+        }
+
+        .trainer {
+            max-width: 1400px;
+            width: 100%;
+            background: white;
+            border-radius: 1.8rem;
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.15);
+            padding: 1.2rem;
+        }
+
+        .stacks {
+            display: flex;
+            flex-direction: row;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: nowrap;
+        }
+
+        .stack {
+            flex: 1;
+            min-width: 0;
+            width: 50%;
+            background: #FEFEFE;
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03), 0 0 0 1px rgba(149, 202, 250, 0.3);
+            overflow: hidden;
+        }
+
+        .stack-title {
+            background: #F8FAFE;
+            padding: 0.8rem 0.5rem;
+            text-align: center;
+            border-bottom: 2px solid #95CAFA;
+        }
+
+        .stack-title h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1F3B4C;
+        }
+
+        .cards-container {
+            min-height: 350px;
+            max-height: 450px;
+            overflow-y: auto;
+            padding: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.7rem;
+            transition: background 0.1s;
+        }
+
+        .cards-container.drag-over {
+            background: #f5faff;
+            border-radius: 1rem;
+        }
+
+        .stack-card {
+            background: white;
+            border: 2px solid #95CAFA;
+            border-radius: 1rem;
+            padding: 0.7rem 0.9rem;
+            font-size: 0.82rem;
+            line-height: 1.4;
+            color: #1d2c3a;
+            font-weight: 460;
+            cursor: grab;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .stack-card:active {
+            cursor: grabbing;
+        }
+
+        .stack-card.dragging {
+            opacity: 0.3;
+            cursor: grabbing;
+        }
+
+        .stack-card.correct-card {
+            border-color: #81c995 !important;
+            background-color: #f0faf2;
+        }
+
+        .stack-card.wrong-card {
+            border-color: #f28b82 !important;
+            background-color: #fff6f5;
+        }
+
+        .source-area {
+            background: #FFFFFF;
+            border-radius: 1.2rem;
+            margin: 0.3rem 0 1.2rem 0;
+            padding: 0.8rem;
+            border: 1px dashed rgba(149, 202, 250, 0.7);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        .source-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #8ba0ae;
+            margin-bottom: 0.6rem;
+            text-align: center;
+        }
+
+        .active-card {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .source-card {
+            background: white;
+            border: 2px solid #95CAFA;
+            border-radius: 1rem;
+            padding: 0.9rem 1rem;
+            font-size: 0.85rem;
+            line-height: 1.45;
+            color: #1d2c3a;
+            font-weight: 460;
+            cursor: grab;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            user-select: none;
+        }
+
+        .source-card:active {
+            cursor: grabbing;
+        }
+
+        .source-card.dragging {
+            opacity: 0.3;
+            cursor: grabbing;
+        }
+
+        .action-bar {
+            display: flex;
+            justify-content: center;
+            margin-top: 0.8rem;
+        }
+
+        .main-btn {
+            background: #2c5e82;
+            border: none;
+            padding: 0.6rem 1.8rem;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: inherit;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(44,94,130,0.25);
+            min-width: 160px;
+        }
+
+        .main-btn:hover {
+            background: #1f4a66;
+            transform: scale(0.98);
+        }
+
+        .reset-btn {
+            background: #4a6272;
+            box-shadow: 0 4px 12px rgba(74,98,114,0.2);
+        }
+
+        .reset-btn:hover {
+            background: #354f60;
+        }
+
+        .status-bar {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            font-size: 0.75rem;
+            color: #2f5b7a;
+            padding-top: 0.8rem;
+            border-top: 1px solid #e9edf2;
+        }
+
+        .message {
+            font-weight: 500;
+            background: #eef3fc;
+            padding: 0.3rem 1rem;
+            border-radius: 30px;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .trainer {
+                padding: 0.8rem;
+            }
+            .stack-title h2 {
+                font-size: 0.8rem;
+            }
+            .stack-card, .source-card {
+                font-size: 0.72rem;
+                padding: 0.5rem 0.7rem;
+            }
+            .cards-container {
+                min-height: 280px;
+                padding: 0.5rem;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="trainer">
+    <div class="stacks">
+        <div class="stack" data-stack-type="asset" id="stackAsset">
+            <div class="stack-title">
+                <h2>✅ Относим к активу по договору</h2>
+            </div>
+            <div class="cards-container" id="assetContainer"></div>
+        </div>
+        <div class="stack" data-stack-type="nonAsset" id="stackNonAsset">
+            <div class="stack-title">
+                <h2>❌ НЕ относим к активу по договору</h2>
+            </div>
+            <div class="cards-container" id="nonAssetContainer"></div>
+        </div>
+    </div>
+
+    <div class="source-area">
+        <div class="source-title">← перетащите расходы в нужную колонку →</div>
+        <div id="activeCardContainer" class="active-card"></div>
+    </div>
+
+    <div class="action-bar">
+        <button class="main-btn" id="actionBtn">Проверить</button>
+    </div>
+
+    <div class="status-bar">
+        <div class="message" id="messageArea">Перетащите все расходы в нужные колонки</div>
+    </div>
+</div>
+
+<script>
+    // Данные расходов
+    const situationsData = [
+        // Относим к активу по договору
+        { id: 0, text: "Бонус менеджера", correctType: "asset" },
+        { id: 1, text: "Расходы на услуги юриста по сложному договору", correctType: "asset" },
+        { id: 2, text: "Расходы на проект и предпроектные работы", correctType: "asset" },
+        // НЕ относим к активу по договору
+        { id: 3, text: "Общие административные и управленческие расходы", correctType: "nonAsset" },
+        { id: 4, text: "Затраты на неудачные переговоры", correctType: "nonAsset" },
+        { id: 5, text: "Обучение сотрудников для общей подготовки", correctType: "nonAsset" },
+        { id: 6, text: "Реклама и маркетинг", correctType: "nonAsset" }
+    ];
+
+    let cardsQueue = [];
+    let assignedCards = [];
+    let currentCard = null;
+    let isCheckMode = false;
+    
+    const assetContainer = document.getElementById('assetContainer');
+    const nonAssetContainer = document.getElementById('nonAssetContainer');
+    const activeCardContainer = document.getElementById('activeCardContainer');
+    const actionBtn = document.getElementById('actionBtn');
+    const messageArea = document.getElementById('messageArea');
+    
+    let draggedCardData = null;
+    let draggedElement = null;
+    
+    function renderStacks() {
+        assetContainer.innerHTML = '';
+        nonAssetContainer.innerHTML = '';
+        
+        const assetItems = assignedCards.filter(item => item.userType === 'asset');
+        const nonAssetItems = assignedCards.filter(item => item.userType === 'nonAsset');
+        
+        function createStackCard(cardItem, containerType) {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'stack-card';
+            cardDiv.innerText = cardItem.text;
+            cardDiv.setAttribute('data-id', cardItem.id);
+            cardDiv.setAttribute('data-type', containerType);
+            cardDiv.setAttribute('draggable', 'true');
+            
+            if (isCheckMode) {
+                const isCorrect = (cardItem.userType === cardItem.correctType);
+                if (isCorrect) {
+                    cardDiv.classList.add('correct-card');
+                } else {
+                    cardDiv.classList.add('wrong-card');
+                }
+            }
+            
+            cardDiv.addEventListener('dragstart', handleCardDragStart);
+            cardDiv.addEventListener('dragend', handleDragEnd);
+            cardDiv.addEventListener('dragenter', (e) => e.preventDefault());
+            cardDiv.addEventListener('dragover', (e) => e.preventDefault());
+            
+            return cardDiv;
+        }
+        
+        assetItems.forEach(item => {
+            assetContainer.appendChild(createStackCard(item, 'asset'));
+        });
+        nonAssetItems.forEach(item => {
+            nonAssetContainer.appendChild(createStackCard(item, 'nonAsset'));
+        });
+    }
+    
+    function renderCurrentCard() {
+        activeCardContainer.innerHTML = '';
+        
+        if (!currentCard && cardsQueue.length === 0) {
+            const emptyMsg = document.createElement('div');
+            emptyMsg.className = 'source-card';
+            emptyMsg.style.cursor = 'default';
+            emptyMsg.style.background = '#f9fbfd';
+            emptyMsg.style.borderColor = '#cde0ed';
+            emptyMsg.style.textAlign = 'center';
+            emptyMsg.innerText = '✨ Все расходы распределены ✨';
+            activeCardContainer.appendChild(emptyMsg);
+            return;
+        }
+        
+        if (currentCard) {
+            const cardEl = document.createElement('div');
+            cardEl.className = 'source-card';
+            cardEl.setAttribute('draggable', 'true');
+            cardEl.setAttribute('data-id', currentCard.id);
+            cardEl.setAttribute('data-from-queue', 'true');
+            cardEl.innerText = currentCard.text;
+            
+            cardEl.addEventListener('dragstart', handleQueueDragStart);
+            cardEl.addEventListener('dragend', handleDragEnd);
+            cardEl.addEventListener('dragenter', (e) => e.preventDefault());
+            cardEl.addEventListener('dragover', (e) => e.preventDefault());
+            
+            activeCardContainer.appendChild(cardEl);
+        }
+    }
+    
+    function handleQueueDragStart(e) {
+        if (isCheckMode) {
+            e.preventDefault();
+            messageArea.innerText = 'Сначала нажмите "Начать заново"';
+            return false;
+        }
+        if (!currentCard) return false;
+        
+        draggedElement = this;
+        draggedCardData = {
+            id: currentCard.id,
+            sourceType: 'queue',
+            fromQueue: true,
+            element: this
+        };
+        e.dataTransfer.setData('text/plain', currentCard.id);
+        e.dataTransfer.effectAllowed = 'move';
+        this.classList.add('dragging');
+    }
+    
+    function handleCardDragStart(e) {
+        if (isCheckMode) {
+            e.preventDefault();
+            messageArea.innerText = 'Сначала нажмите "Начать заново"';
+            return false;
+        }
+        
+        const cardId = parseInt(this.getAttribute('data-id'));
+        const currentType = this.getAttribute('data-type');
+        
+        const cardData = assignedCards.find(c => c.id === cardId);
+        if (!cardData) return false;
+        
+        draggedElement = this;
+        draggedCardData = {
+            id: cardId,
+            sourceType: currentType,
+            fromQueue: false,
+            cardData: cardData,
+            element: this
+        };
+        e.dataTransfer.setData('text/plain', cardId);
+        e.dataTransfer.effectAllowed = 'move';
+        this.classList.add('dragging');
+    }
+    
+    function handleDragEnd(e) {
+        if (draggedElement) {
+            draggedElement.classList.remove('dragging');
+        }
+        draggedElement = null;
+        draggedCardData = null;
+        document.querySelectorAll('.cards-container').forEach(cont => {
+            cont.classList.remove('drag-over');
+        });
+    }
+    
+    function setupDropZones() {
+        const containers = [assetContainer, nonAssetContainer];
+        containers.forEach(container => {
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                container.classList.add('drag-over');
+            });
+            container.addEventListener('dragleave', (e) => {
+                container.classList.remove('drag-over');
+            });
+            container.addEventListener('drop', handleDropOnColumn);
+        });
+    }
+    
+    function handleDropOnColumn(e) {
+        e.preventDefault();
+        const targetContainer = e.currentTarget;
+        targetContainer.classList.remove('drag-over');
+        
+        if (isCheckMode) {
+            messageArea.innerText = 'Сначала нажмите "Начать заново"';
+            return;
+        }
+        
+        if (!draggedCardData) return;
+        
+        let targetType = null;
+        if (targetContainer.id === 'assetContainer') {
+            targetType = 'asset';
+        } else if (targetContainer.id === 'nonAssetContainer') {
+            targetType = 'nonAsset';
+        } else {
+            return;
+        }
+        
+        const draggedId = draggedCardData.id;
+        
+        if (draggedCardData.fromQueue) {
+            if (!currentCard || currentCard.id !== draggedId) return;
+            
+            assignedCards.push({
+                id: currentCard.id,
+                text: currentCard.text,
+                userType: targetType,
+                correctType: currentCard.correctType
+            });
+            
+            if (cardsQueue.length > 0) {
+                currentCard = cardsQueue.shift();
+                messageArea.innerText = `Перетащите новые расходы (осталось: ${cardsQueue.length + 1})`;
+            } else {
+                currentCard = null;
+                messageArea.innerText = 'Все расходы распределены! Нажмите "Проверить"';
+            }
+            
+            renderStacks();
+            renderCurrentCard();
+            draggedCardData = null;
+            draggedElement = null;
+            return;
+        }
+        
+        const sourceType = draggedCardData.sourceType;
+        
+        if (sourceType === targetType) {
+            messageArea.innerText = 'Расход уже в этой колонке';
+            draggedCardData = null;
+            draggedElement = null;
+            return;
+        }
+        
+        const cardIndex = assignedCards.findIndex(c => c.id === draggedId);
+        if (cardIndex === -1) return;
+        
+        assignedCards[cardIndex].userType = targetType;
+        
+        renderStacks();
+        renderCurrentCard();
+        
+        messageArea.innerText = `Расход перемещен в колонку "${targetType === 'asset' ? 'Относим к активу' : 'НЕ относим к активу'}"`;
+        
+        draggedCardData = null;
+        draggedElement = null;
+    }
+    
+    function checkAnswers() {
+        if (currentCard !== null) {
+            messageArea.innerText = `Сначала распределите текущий расход! Осталось: ${cardsQueue.length + 1}`;
+            return;
+        }
+        
+        if (assignedCards.length !== situationsData.length) {
+            messageArea.innerText = `Распределено ${assignedCards.length} из ${situationsData.length}. Завершите распределение.`;
+            return;
+        }
+        
+        isCheckMode = true;
+        renderStacks();
+        renderCurrentCard();
+        
+        actionBtn.innerText = 'Начать заново';
+        actionBtn.classList.add('reset-btn');
+        
+        let correctCount = 0;
+        assignedCards.forEach(card => {
+            if (card.userType === card.correctType) correctCount++;
+        });
+        const total = assignedCards.length;
+        
+        if (correctCount === total) {
+            messageArea.innerText = `🎉 Отлично! Все верно (${correctCount}/${total})! Зеленые рамки.`;
+        } else {
+            messageArea.innerText = `❌ Ошибок: ${total - correctCount}. Красные рамки — неверно.`;
+        }
+    }
+    
+    function resetGame() {
+        cardsQueue = situationsData.map(card => ({
+            id: card.id,
+            text: card.text,
+            correctType: card.correctType
+        }));
+        
+        // Перемешиваем очередь для большей эффективности обучения
+        for (let i = cardsQueue.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [cardsQueue[i], cardsQueue[j]] = [cardsQueue[j], cardsQueue[i]];
+        }
+        
+        if (cardsQueue.length > 0) {
+            currentCard = cardsQueue.shift();
+        } else {
+            currentCard = null;
+        }
+        
+        assignedCards = [];
+        isCheckMode = false;
+        
+        actionBtn.innerText = 'Проверить';
+        actionBtn.classList.remove('reset-btn');
+        
+        renderStacks();
+        renderCurrentCard();
+        
+        const remainingCount = cardsQueue.length + (currentCard ? 1 : 0);
+        messageArea.innerText = `Перетащите расходы в нужную колонку (осталось: ${remainingCount})`;
+        
+        draggedCardData = null;
+        draggedElement = null;
+    }
+    
+    function onMainAction() {
+        if (isCheckMode) {
+            resetGame();
+        } else {
+            checkAnswers();
+        }
+    }
+    
+    function init() {
+        resetGame();
+        setupDropZones();
+        actionBtn.addEventListener('click', onMainAction);
+        
+        window.addEventListener('dragstart', (e) => {
+            if (!e.target.closest('.stack-card') && !e.target.closest('.source-card')) {
+                e.preventDefault();
+            }
+        });
+    }
+    
+    init();
+</script>
+</body>
+</html>
